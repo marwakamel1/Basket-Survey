@@ -1,19 +1,19 @@
-﻿using basketSurvey.Services;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Mapster;
 
 namespace basketSurvey.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PollsController(IPollService pollService) : ControllerBase
+    public class PollsController(IPollService pollService ) : ControllerBase
     {
         private readonly IPollService _pollService = pollService;
+    
 
         [HttpGet("")]
         public IActionResult GetAll()
         {
-            return Ok(_pollService.GetAll());
+            var polls = _pollService.GetAll();
+            return Ok(polls.Adapt<IEnumerable<PollResponse>>());
         }
 
         [HttpGet("{id}")]
@@ -21,24 +21,24 @@ namespace basketSurvey.Controllers
         {
 
             var poll = _pollService.Get(id);
-            return poll is null ? NotFound() : Ok(poll);
+            return poll is null ? NotFound() : Ok(poll.Adapt<PollResponse>());
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] Poll poll)
+        public IActionResult Post([FromBody] PollRequest poll)
         {
 
-            var newPoll = _pollService.Add(poll);
+            var newPoll = _pollService.Add(poll.Adapt<Poll>());
 
-            return CreatedAtAction(nameof(Get), new { id = newPoll.Id }, newPoll);
+            return CreatedAtAction(nameof(Get), new { id = newPoll.Id }, newPoll.Adapt<PollResponse>());
 
         }
 
         [HttpPut("{id}")]
-        public IActionResult Put(int id, Poll poll)
+        public IActionResult Put(int id, PollRequest poll)
         {
 
-            bool isUpdated = _pollService.Update(id, poll);
+            bool isUpdated = _pollService.Update(id, poll.Adapt<Poll>());
             return isUpdated ? NoContent() : NotFound();
         }
 
