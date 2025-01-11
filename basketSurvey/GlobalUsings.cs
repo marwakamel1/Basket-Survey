@@ -1,5 +1,12 @@
 ﻿global using Microsoft.AspNetCore.Mvc;
-global using basketSurvey.Models;
+global using basketSurvey.Entities;
 global using basketSurvey.Services;
 global using MapsterMapper;
 global using Mapster;
+global using basketSurvey.Persistence;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using basketSurvey.Authentication;
+global using basketSurvey.Abstractions;
+global using basketSurvey.Errors;
+global using basketSurvey.Contracts.Polls;

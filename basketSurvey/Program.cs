@@ -7,8 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-DependencyInjection.AddDependencies(builder.Services);
-builder.Services.AddDependencies();
+//builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
+//    .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.AddDependencies(builder.Configuration);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -21,8 +22,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors();
 app.UseAuthorization();
 
+//app.MapIdentityApi<ApplicationUser>();
 app.MapControllers();
+
+app.UseExceptionHandler();
 
 app.Run();
