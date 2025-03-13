@@ -10,3 +10,4 @@ global using basketSurvey.Authentication;
 global using basketSurvey.Abstractions;
 global using basketSurvey.Errors;
 global using basketSurvey.Contracts.Polls;
+global using basketSurvey.Extentions;

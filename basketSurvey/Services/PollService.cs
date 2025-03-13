@@ -1,10 +1,14 @@
 ﻿using basketSurvey.Entities;
+using Hangfire;
+using System.Threading;
 
 namespace basketSurvey.Services
 {
-    public class PollService(ApplicationDbContext context) : IPollService
+    public class PollService(ApplicationDbContext context, INotificationService notificationService) : IPollService
     {
         private readonly ApplicationDbContext _context = context;
+        private readonly INotificationService _notificationService = notificationService;
+
         //private static readonly List<Poll> _polls = [
         //new Poll
         //{
@@ -49,6 +53,7 @@ namespace basketSurvey.Services
 
 
         public async Task<Result<IEnumerable<PollResponse>>> GetAllAsync(CancellationToken cancellationToken) => Result.Success( (await _context.Polls.AsNoTracking().ToListAsync(cancellationToken)).Adapt<IEnumerable<PollResponse>>());
+        //public async Task<Result<IEnumerable<PollResponse>>> GetAllAsync(CancellationToken cancellationToken) => Result.Success( _context.Polls.AsNoTracking().ProjectToType<PollResponse>().AsEnumerable());
 
         public async Task<Result> UpdateAsync(int id, PollRequest poll, CancellationToken cancellationToken = default)
         {
@@ -76,10 +81,14 @@ namespace basketSurvey.Services
                 return Result.Failure(PollErrors.PollNotFound);
             foundpoll.IsPublished = !foundpoll.IsPublished;
             await _context.SaveChangesAsync(cancellationToken);
-            return Result.Success();
 
+            if (foundpoll.IsPublished && foundpoll.StartAt == DateOnly.FromDateTime(DateTime.UtcNow))
+                BackgroundJob.Enqueue(() => _notificationService.NotifyNewPoll(id));
+            return Result.Success();
         }
 
+        public async Task<Result<IEnumerable<PollResponse>>> GetCurrentAsync(CancellationToken cancellationToken = default) =>  Result.Success((await _context.Polls.Where(x => x.IsPublished && x.StartAt <= DateOnly.FromDateTime(DateTime.UtcNow) && x.EndAt >= DateOnly.FromDateTime(DateTime.UtcNow)).AsNoTracking().ToListAsync(cancellationToken)).Adapt<IEnumerable<PollResponse>>());
+    
     }
 
 }

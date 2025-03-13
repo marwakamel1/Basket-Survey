@@ -23,7 +23,7 @@ namespace basketSurvey.Controllers
 
             var result = await _pollService.GetAsync(id , cancellationToken);
             return result.IsSuccess ? Ok(result.Value) :
-                result.ToProblem(StatusCodes.Status404NotFound);
+                result.ToProblem();
                 //Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.code, detail: result.Error.description);
         }
 
@@ -34,7 +34,7 @@ namespace basketSurvey.Controllers
             var result = await _pollService.AddAsync(poll, cancellationToken);
 
             return result.IsSuccess ? CreatedAtAction(nameof(Get), new { id = result.Value.Id }, result.Value)
-                : result.ToProblem(StatusCodes.Status409Conflict);
+                : result.ToProblem();
             
 
         }
@@ -44,8 +44,7 @@ namespace basketSurvey.Controllers
         {
 
             var result = await _pollService.UpdateAsync(id, poll, cancellationToken);
-            return result.IsSuccess ? Ok()
-                  :result.Error == PollErrors.PollNotFound ? result.ToProblem(StatusCodes.Status404NotFound) : result.ToProblem(StatusCodes.Status409Conflict);
+            return result.IsSuccess ? Ok() : result.ToProblem();
                 //: Problem(statusCode: StatusCodes.Status404NotFound, title : result.Error.code ,detail :result.Error.description);
         }
 
@@ -56,7 +55,7 @@ namespace basketSurvey.Controllers
             var result = await _pollService.DeleteAsync(id, cancellationToken);
 
             return result.IsSuccess ? NoContent()
-                  : result.ToProblem(StatusCodes.Status404NotFound);
+                  : result.ToProblem();
             //: Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.code, detail: result.Error.description);
         }
 
@@ -66,8 +65,15 @@ namespace basketSurvey.Controllers
 
             var result = await _pollService.TogglePublishStatusAsync(id,  cancellationToken);
             return result.IsSuccess ? NoContent()
-                  : result.ToProblem(StatusCodes.Status404NotFound);
+                  : result.ToProblem();
             //: Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.code, detail: result.Error.description);
+        }
+
+        [HttpGet("current")]
+        public async Task<IActionResult> GetCurrent(CancellationToken cancellationToken)
+        {
+            var result = await _pollService.GetCurrentAsync(cancellationToken);
+            return Ok(result.Value);
         }
 
     }

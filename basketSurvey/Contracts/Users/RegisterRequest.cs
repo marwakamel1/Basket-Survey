@@ -2,7 +2,7 @@
 {
     public record RegisterRequest
     ( 
-        string Username,
+        //string Username,
         string Email,
         string FirstName,
         string LastName,

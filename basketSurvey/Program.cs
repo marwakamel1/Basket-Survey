@@ -1,6 +1,8 @@
 using basketSurvey;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Hangfire;
+using Serilog;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +12,10 @@ var builder = WebApplication.CreateBuilder(args);
 //builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
 //    .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddDependencies(builder.Configuration);
+builder.Host.UseSerilog((context,configuration) =>
+
+    configuration.ReadFrom.Configuration(context.Configuration)
+);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -20,7 +26,15 @@ if (app.Environment.IsDevelopment())
     //app.MapOpenApi();
 }
 
+app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
+app.UseHangfireDashboard("/jobs");
+
+var scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();
+using var scope = scopeFactory.CreateScope();
+var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+
+RecurringJob.AddOrUpdate("SendNewPollNotification",() => notificationService.NotifyNewPoll(null),Cron.Daily);
 
 app.UseCors();
 app.UseAuthorization();

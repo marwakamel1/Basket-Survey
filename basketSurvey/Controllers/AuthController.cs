@@ -6,17 +6,19 @@ namespace basketSurvey.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class AuthController(IAuthService authService) : ControllerBase
+    public class AuthController(IAuthService authService, ILogger<AuthController> logger) : ControllerBase
     {
         private readonly IAuthService authService = authService;
+        private readonly ILogger<AuthController> _logger = logger;
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginRequest request , CancellationToken cancellationToken )
         {
+            _logger.LogInformation("login request with email : {email}", request.email);
             //throw new Exception("My exception");
-           var authResult =  await authService.GetTokenAsync(request, cancellationToken);
+           var authResult =  await authService.GetTokenAsync(request.email,request.password, cancellationToken);
             return authResult.IsSuccess ? Ok(authResult.Value)
-                : authResult.ToProblem(StatusCodes.Status404NotFound);
+                : authResult.ToProblem();
                 //: Problem(statusCode: StatusCodes.Status404NotFound, title: authResult.Error.code, detail: authResult.Error.description);
         }
 
@@ -27,7 +29,7 @@ namespace basketSurvey.Controllers
             var authResult = await authService.GetRefreshTokenAsync(request.Token, request.RefreshToken, cancellationToken);
 
             return authResult.IsSuccess ? Ok(authResult.Value)
-                :  authResult.ToProblem(StatusCodes.Status404NotFound);
+                :  authResult.ToProblem();
                 //: Problem(statusCode: StatusCodes.Status404NotFound, title: authResult.Error.code, detail: authResult.Error.description) ;
         }
 
@@ -38,7 +40,7 @@ namespace basketSurvey.Controllers
             var authResult = await authService.RevokeRefreshTokenAsync(request.Token, request.RefreshToken, cancellationToken);
 
             return authResult.IsSuccess ?  Ok()
-                  : authResult.ToProblem(StatusCodes.Status404NotFound);
+                  : authResult.ToProblem();
                 //: Problem(statusCode: StatusCodes.Status404NotFound, title: authResult.Error.code, detail: authResult.Error.description);
         }
 
@@ -48,9 +50,31 @@ namespace basketSurvey.Controllers
         {
             var authResult = await authService.RegisterAsync(request, cancellationToken);
 
-            return authResult.IsSuccess ? Ok(authResult.Value)
-                  : authResult.ToProblem(StatusCodes.Status404NotFound);
+            return authResult.IsSuccess ? Ok()
+                  : authResult.ToProblem();
                 //: Problem(statusCode: StatusCodes.Status404NotFound, title: authResult.Error.code, detail: authResult.Error.description) ;
+        }
+
+        [HttpPost]
+        [Route("ConfirmEmail")]
+        public async Task<IActionResult> ConfirmEmail(ConfirmEmailRequest request)
+        {
+            var authResult = await authService.ConfirmEmailAsync(request);
+
+            return authResult.IsSuccess ? Ok()
+                  : authResult.ToProblem();
+            //: Problem(statusCode: StatusCodes.Status404NotFound, title: authResult.Error.code, detail: authResult.Error.description) ;
+        }
+
+        [HttpPost]
+        [Route("ResendConfirmationEmail")]
+        public async Task<IActionResult> ResendConfirmationEmail(ResendConfirmationEmailRequest request)
+        {
+            var authResult = await authService.ResendConfirmationEmailAsync(request);
+
+            return authResult.IsSuccess ? Ok()
+                  : authResult.ToProblem();
+            //: Problem(statusCode: StatusCodes.Status404NotFound, title: authResult.Error.code, detail: authResult.Error.description) ;
         }
     }
 }
