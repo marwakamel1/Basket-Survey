@@ -88,7 +88,7 @@ namespace basketSurvey.Controllers
             //: Problem(statusCode: StatusCodes.Status404NotFound, title: authResult.Error.code, detail: authResult.Error.description) ;
         }
 
-        [HttpGet]
+        [HttpPut]
         [Route("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
