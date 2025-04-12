@@ -284,7 +284,7 @@ namespace basketSurvey.Services
 
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
-            _logger.LogInformation($"confirmation test : {code}", code);
+            //_logger.LogInformation($"confirmation test : {code}", code);
             _logger.LogInformation($"tessst");
             await SendResetPasswordEmail(user, code);
 
