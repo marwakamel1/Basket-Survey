@@ -273,13 +273,12 @@ namespace basketSurvey.Services
 
         }
 
-        public async Task<Result> SendResetPasswordEmailAsync(string email)
+        public async Task<bool> SendResetPasswordEmailAsync(string email)
         {
             var user = await UserManager.FindByEmailAsync(email);
 
             if (user == null)
-                //return Result.Success();
-               return Result.Failure();
+               return Result.Success();
 
             var code = await UserManager.GeneratePasswordResetTokenAsync(user);
 
