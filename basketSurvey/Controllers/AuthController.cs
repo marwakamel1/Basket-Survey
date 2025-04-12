@@ -76,5 +76,26 @@ namespace basketSurvey.Controllers
                   : authResult.ToProblem();
             //: Problem(statusCode: StatusCodes.Status404NotFound, title: authResult.Error.code, detail: authResult.Error.description) ;
         }
+
+        [HttpPost]
+        [Route("forget-password")]
+        public async Task<IActionResult> ForgetPassword([FromBody] ForgetPasswordRequest request)
+        {
+            var authResult = await authService.SendResetPasswordEmailAsync(request.email);
+
+            return Ok();
+                
+            //: Problem(statusCode: StatusCodes.Status404NotFound, title: authResult.Error.code, detail: authResult.Error.description) ;
+        }
+
+        [HttpPost]
+        [Route("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var authResult = await authService.ResetPasswordAsync(request);
+
+            return authResult.IsSuccess ? Ok()
+                 : authResult.ToProblem();
+        }
     }
 }

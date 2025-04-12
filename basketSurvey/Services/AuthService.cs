@@ -119,6 +119,7 @@ namespace basketSurvey.Services
             // generate new token and refresh token
             var (newToken, expiresIn) = JwtProvider.GenerateToken(user);
             var newRefreshToken = GenerateRefreshToken();
+            //var refreshTokenExpiration = DateTime.UtcNow.AddDays(_refreshTokenExpiryDays);
             var refreshTokenExpiration = DateTime.UtcNow.AddDays(_refreshTokenExpiryDays);
 
             user.RefreshTokens.Add(new RefreshToken
@@ -272,6 +273,24 @@ namespace basketSurvey.Services
 
         }
 
+        public async Task<Result> SendResetPasswordEmailAsync(string email)
+        {
+            var user = await UserManager.FindByEmailAsync(email);
+
+            if (user == null)
+                return Result.Success();
+
+            var code = await UserManager.GeneratePasswordResetTokenAsync(user);
+
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+            _logger.LogInformation($"confirmation code : {code}", code);
+
+            await SendResetPasswordEmail(user, code);
+
+            return Result.Success();
+
+        }
         private async Task SendConfirmationEmail(ApplicationUser user, string code)
         {
             var origin = _httpContextAccessor.HttpContext?.Request.Headers.Origin;
@@ -288,5 +307,51 @@ namespace basketSurvey.Services
 
             await Task.CompletedTask;
         }
+        private async Task SendResetPasswordEmail(ApplicationUser user, string code)
+        {
+            var origin = _httpContextAccessor.HttpContext?.Request.Headers.Origin;
+
+            var emailBody = EmailBodyBuilder.GenerateEmailBody("ForgetPassword",
+                templateModel: new Dictionary<string, string>
+                {
+                { "{{name}}", user.FirstName },
+                    { "{{action_url}}", $"{origin}/auth/forgetPassword?email={user.Email}&code={code}" }
+                }
+            );
+
+            BackgroundJob.Enqueue(() => _emailSender.SendEmailAsync(user.Email!, "✅ Survey Basket: Change Password", emailBody));
+
+            await Task.CompletedTask;
+        }
+
+        public async Task<Result> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            var user = await UserManager.FindByEmailAsync(request.Email);
+            if (user is null || !user.EmailConfirmed)
+                return Result.Failure(UserErrors.InvalidCode);
+
+
+            IdentityResult result;
+            try
+            {
+                var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Code));
+                 result = await UserManager.ResetPasswordAsync(user, code, request.NewPassword);
+
+            }
+            catch (FormatException ex)
+            {
+                result = IdentityResult.Failed(UserManager.ErrorDescriber.InvalidToken());
+            }
+
+
+            if (result.Succeeded)
+                return Result.Success();
+
+            var error = result.Errors.First();
+
+            return Result.Failure(new Error(error.Code, error.Description, StatusCodes.Status401Unauthorized));
+        }
+
+
     }
 }
