@@ -278,14 +278,16 @@ namespace basketSurvey.Services
             var user = await UserManager.FindByEmailAsync(email);
 
             if (user == null)
-                return Result.Success();
+                //return Result.Success();
+               return Result.Failure();
 
             var code = await UserManager.GeneratePasswordResetTokenAsync(user);
 
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
             //_logger.LogInformation($"confirmation test : {code}", code);
-            _logger.LogDebug($"tessst");
+
+            _logger.LogInformation($"Reset password email sent to {user.Email}");
             await SendResetPasswordEmail(user, code);
 
             return Result.Success();
