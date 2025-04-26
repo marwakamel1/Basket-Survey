@@ -17,14 +17,19 @@ namespace basketSurvey.Services
 
         public async Task<Result> UpdateInfoAsync(string userId,UserUpdateRequest request)
         {
-            var user = await _userManager.Users.Where(x => x.Id == userId).SingleAsync();
+            //var user = await _userManager.Users.Where(x => x.Id == userId).SingleAsync();
 
-            user = request.Adapt(user);
+            //user = request.Adapt(user);
 
-            await _userManager.UpdateAsync(user);
+            //await _userManager.UpdateAsync(user);
+
+            //return Result.Success();
+
+            await _userManager.Users.Where(x => x.Id == userId)
+                .ExecuteUpdateAsync(x => x.SetProperty(u => u.FirstName, request.FirstName)
+                .SetProperty(u => u.LastName, request.LastName));
 
             return Result.Success();
-
         }
 
         public async Task<Result> ChangePasswordAsync(string userId, ChangePasswordRequest request)
